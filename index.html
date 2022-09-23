@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Petite Vue</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cirrus-ui/dist/cirrus.min.css">
+
+  </head>
+  
+  <body>
+    <div class="bg-gray-100 min-h-100p">
+      <section>
+        <div class="hero">
+          <div class="hero-body">
+            <div class="content">
+              <h1 class="headline-3">Cryptocurrency Displayer</h1>
+              <br>
+              <h3>Learn about Cryptocurrency coins, randomly</h3>
+              <br>
+              <div id="coingecko">
+                <p>Click to display a random coin!</p>
+                <br>
+                <button @click="store.search" class="outline btn-success">Search</button>
+                <div class="divider"></div>
+                <div v-if="store.show">
+                  <img v-bind:src="store.logo" alt="logo" />
+                  <h3>{{ store.coinData.name }}</h3>
+                  <dl>
+                    <dt>Symbol</dt>
+                    <dd>{{ store.coinData.symbol.toUpperCase() }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Market Cap Rank</dt>
+                    <dd>{{ store.coinData.market_cap_rank }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Current Price</dt>
+                    <dd>USD ${{ store.coinData.market_data.current_price.usd }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>All Time High</dt>
+                    <dd>USD ${{ store.coinData.market_data.ath.usd }} on the {{ store.coinData.market_data.ath_date.usd }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>All Time Low</dt>
+                    <dd>USD ${{ store.coinData.market_data.atl.usd }} on the {{ store.coinData.market_data.atl_date.usd }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Token Total Supply</dt>
+                    <dd>{{ store.coinData.market_data.total_supply }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Ciculating Supply</dt>
+                    <dd>{{ store.coinData.market_data.circulating_supply }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Fully Diluted Valuation</dt>
+                    <dd>USD ${{ store.coinData.market_data.fully_diluted_valuation.usd }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Total Value Locked</dt>
+                    <dd>USD ${{ store.coinData.market_data.total_value_locked.usd }} BTC {{ store.coinData.market_data.total_value_locked.btc }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Total Volume</dt>
+                    <dd>USD ${{ store.coinData.market_data.total_volume.usd }} BTC {{ store.coinData.market_data.total_volume.btc }}</dd>
+                  </dl>
+                  <dl>
+                    <dt>Description</dt>
+                    <dd>{{ store.coinData.description.en }}</dd>
+                  </dl>
+                </div>
+
+              </div>
+            </div>
+          
+            </div>
+          </div>
+          
+        </div>
+    
+      </section>
+      
+    </div>
+
+    <script type="module">
+      import { createApp, reactive } from "https://unpkg.com/petite-vue?module";
+
+      const url = "https://api.coingecko.com/api/v3/"
+      const ping = url + "ping";
+      const getAllCoins = url + "coins/list?include_platform=false";
+
+      const store = reactive({
+        connected: false,
+        allTheCoins: "",
+        randomCoin: "",
+        randomCoinId: "",
+        coinResponse: "",
+        coinData: "",
+        logo: "",
+        show: false,
+        async search() {
+          const coingecko = await fetch(ping);
+          const res = await coingecko.json();
+          if (res) {
+            this.connected = true;
+            console.log("API connected: " + this.connected)
+            const allCoins = await fetch(getAllCoins);
+            this.allTheCoins = await allCoins.json();
+
+            // Select a random cryptocurrency
+            for (let i = 0; i < this.allTheCoins.length; i++) {
+              this.randomCoin = this.allTheCoins[Math.floor(Math.random() * this.allTheCoins.length)];
+            }
+
+            this.randomCoinId = this.randomCoin.id;
+
+            const getCoinData = url + "coins/" + this.randomCoinId + "?tickers=true&market_data=true";
+            this.coinResponse = await fetch(getCoinData);
+            this.coinData = await this.coinResponse.json()
+
+            this.logo = await this.coinData.image.large;
+
+            this.show = true;
+            console.log(this.coinData);
+            return;
+          } else {
+            console.log("No connection");
+          }
+        }
+      }) 
+
+      createApp({ store }).mount("#coingecko");
+    </script>
+  </body>
+</html>
